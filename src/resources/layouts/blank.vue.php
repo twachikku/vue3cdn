@@ -1,0 +1,1 @@
+<div class="pa-4"><?= $content ?></div>
