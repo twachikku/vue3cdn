@@ -1,5 +1,6 @@
 {
     "name": "twachikku/vue3cdn",
+    "version" : "1.0.0",
     "description": "Vue3 CDN support for Laravel 10.x up",
     "autoload": {
         "psr-4": {
