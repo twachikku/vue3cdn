@@ -6,15 +6,23 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 
-class VueController
+class VueController extends \App\Http\Controllers\Controller
 {
     var $phpfilepath = "vue3";
 
     var $resource_paths = [];
+    var $request;
 
+    public function __construct(Request $request)
+    {
+      $this->request = $request;
+    }
+  
 
     public function index($appid, $pageid = "", $args = [])
     {
+        $_time_start=microtime(true);
+        $request = $this->request;
         if ($pageid == "") {
             $pageid = $appid;
             $appid = "";
@@ -28,7 +36,7 @@ class VueController
             $ext = self::file_ext($pageid);
             $pageid = substr($pageid, 0, $p);
         }
-        if ($appid == "api" || $appid == "json" || $ext == ".json") {
+        if ($appid == "json" || $ext == ".json") {
             return $this->json($appid, $pageid);
         }
         $error = null;
@@ -46,6 +54,7 @@ class VueController
         $props['zip'] = false;
         $props['vuetify'] = true;
         $props['quasar'] = true;
+        $props['path'] = "$appid/$pageid";
         //$props['req']  = request()->all();
         $errors = session("errors");
         if ($errors != null) {
@@ -61,6 +70,8 @@ class VueController
 
         $response = null;
         ob_start();
+         $params=$props;
+         $props=[];
         if ($files['header']!==false) {
             $response = include($files['header']);
         }
@@ -81,6 +92,7 @@ class VueController
         if (data_get($props, 'contentType') == "json") {
             if ($content != '')
                 $props['console'] = $content;
+            $props['exec_time']=microtime(true)-$_time_start;
             return $this->response_json($props);
         }
         if (isset($props['redirect'])) {
@@ -89,6 +101,7 @@ class VueController
         if ($response != null && $response instanceof Response) {
             return $response;
         }
+        $props=array_merge($params,$props);
 
         if ($files['php_left']!==false) {
             ob_start();
@@ -108,16 +121,25 @@ class VueController
         }
         if (isset($props['layout'])) {
             $file = $this->get_layoutfile("{$props['layout']}.vue.php","{$props['layout']}.php");
+            $page['layout']=$file;
             if ($file!==false) {
-                ob_start();
-                include($file);
-                $content = ob_get_contents();
-                ob_end_clean();
+                if(file_exists($file)){
+                    ob_start();
+                    try {
+                        include($file);
+                        $content = ob_get_contents();
+                    } catch (\Throwable $th) {
+                        $content.="<br>".$file;
+                        $content.="<br>".$th->getMessage();
+                    }
+                    ob_end_clean();
+                }
             }
         }
         $this->extract_template($content, $props);
         $props['page'] = $page;
         $props['data'] = $data;
+        $props['exec_time_1']=microtime(true)-$_time_start;
         return view($this->phpfilepath . "::index", $props);
     }
 
@@ -134,10 +156,10 @@ class VueController
         $f['header'] = $this->get_phpvuefile("$appid/_config.php");
         if ($method == 'get') {
             $f['php_left'] = $this->get_phpvuefile("$appid/_menu.vue.php","$appid/_menu.php");
-            $f['php_right'] = $this->get_phpvuefile("$appid/_menu.vue.php","$appid/_right.php");
+            $f['php_right'] = $this->get_phpvuefile("$appid/_right.vue.php","$appid/_right.php");
             $f['php'] = $this->get_phpvuefile("{$f['name']}.vue.php","{$f['name']}.php");
         } else {
-            $f['php'] = $this->get_phpvuefile("{$f['name']}.vue.php","{$f['name']}.$method.php");
+            $f['php'] = $this->get_phpvuefile("{$f['name']}.$method.php");
         }
         return $f;
     }
@@ -235,6 +257,7 @@ class VueController
         ];
         foreach ($paths as $p) {
             $f = "$p/$filename";
+      
             if (file_exists($f))
                 return $f;
         }

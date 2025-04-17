@@ -13,13 +13,6 @@
     <div class="vuebody" id='app' style="display:none">
         <v-app>
             <?= $template ?>
-            <div class="position-sticky bottom-0 pa-2 w-100" v-if="notify_message && notify_message.length>0"
-                style="z-index:2000">
-                <div class="d-flex flex-column-reverse">
-                    <v-alert v-for="m in notify_message" :text="m . text" :type="m . color" :title="m . title" closable
-                        v-model="m.active" style="width:80%;max-width:600px;margin:auto;margin-top:2px;"></v-alert>
-                </div>
-            </div>
         </v-app>
     </div>
     @if ($zip === true)
@@ -42,13 +35,19 @@
     @endif
     <script>
         const $page = {
-            data: {},
+            data: {
+                onload : [],
+            },
             mounted() {
                 window.$vueapp = this;
-                this.ready()
+                for (const ev of this.onload) {
+                   ev(this);
+                }
+                this.ready();
             },
             methods: {
                 ready() { },
+                $t:(x)=>x, 
             },
             watch: {},
             computed: {},

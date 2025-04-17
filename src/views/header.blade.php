@@ -12,7 +12,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/vuetify/3.6.12/vuetify.min.css" rel="stylesheet">
    @endif
    @if ($quasar === true)   
-    <link href="https://cdn.jsdelivr.net/npm/quasar@2.16.6/dist/quasar.prod.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/quasar@2.x/dist/quasar.prod.css" rel="stylesheet">
    @endif
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.14/vue.global.prod.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vuetify/3.6.12/vuetify.min.js"></script>
